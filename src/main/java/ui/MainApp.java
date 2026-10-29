@@ -23,7 +23,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
-/** Member 3: JavaFX user interface and integration of the services. */
 public class MainApp extends Application {
     private final CsvFileService csvService = new CsvFileService();
     private final BenchmarkService benchmarkService = new BenchmarkService();

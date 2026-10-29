@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-/** Member 3: repeated timing and result verification. */
 public class BenchmarkService {
     private final int warmupRuns;
 
@@ -48,7 +47,6 @@ public class BenchmarkService {
     }
 
     private static List<List<String>> copyRows(List<List<String>> source) {
-        // Sorting changes only row order, so copying the outer list is sufficient.
         return new ArrayList<>(source);
     }
 

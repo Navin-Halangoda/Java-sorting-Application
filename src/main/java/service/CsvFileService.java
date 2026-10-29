@@ -13,7 +13,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Member 1: CSV import and validation. */
+/** Service for CSV import and validation. */
 public class CsvFileService {
     public CsvDataset load(Path path) throws IOException {
         try (Reader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8);

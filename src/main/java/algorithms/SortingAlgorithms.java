@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-/** Member 2: sorting algorithm implementations. Sorts the supplied list in-place. */
 public final class SortingAlgorithms {
     private static final int INSERTION_SORT_LIMIT = 10_000;
 

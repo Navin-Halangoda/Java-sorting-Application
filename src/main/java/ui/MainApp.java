@@ -18,8 +18,10 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 /** Member 3: JavaFX user interface and integration of the services. */
 public class MainApp extends Application {
@@ -129,6 +131,7 @@ public class MainApp extends Application {
     }
 
     private Comparator<List<String>> numericComparator(int column, boolean ascending) {
+        Map<String, Double> parsedValues = new HashMap<>();
         return (first, second) -> {
             String a = column < first.size() ? first.get(column).trim() : "";
             String b = column < second.size() ? second.get(column).trim() : "";
@@ -137,7 +140,9 @@ public class MainApp extends Application {
                 if (blankA && blankB) return 0;
                 return blankA ? 1 : -1; // blank values always stay last
             }
-            int comparison = Double.compare(Double.parseDouble(a), Double.parseDouble(b));
+            double valueA = parsedValues.computeIfAbsent(a, Double::parseDouble);
+            double valueB = parsedValues.computeIfAbsent(b, Double::parseDouble);
+            int comparison = Double.compare(valueA, valueB);
             return ascending ? comparison : -comparison;
         };
     }

@@ -23,9 +23,10 @@ public class BenchmarkService {
         List<PerformanceResult> results = new ArrayList<>();
         List<List<String>> fastestRows = null;
         long fastestTime = Long.MAX_VALUE;
+        int effectiveWarmupRuns = originalRows.size() > 10_000 ? 0 : warmupRuns;
 
         for (SortAlgorithm algorithm : SortAlgorithm.values()) {
-            for (int i = 0; i < warmupRuns; i++) {
+            for (int i = 0; i < effectiveWarmupRuns; i++) {
                 List<List<String>> warmup = copyRows(originalRows);
                 SortingAlgorithms.sort(warmup, comparator, algorithm);
             }
@@ -47,9 +48,8 @@ public class BenchmarkService {
     }
 
     private static List<List<String>> copyRows(List<List<String>> source) {
-        List<List<String>> copy = new ArrayList<>(source.size());
-        for (List<String> row : source) copy.add(new ArrayList<>(row));
-        return copy;
+        // Sorting changes only row order, so copying the outer list is sufficient.
+        return new ArrayList<>(source);
     }
 
     private static boolean isSorted(List<List<String>> rows, Comparator<List<String>> comparator) {

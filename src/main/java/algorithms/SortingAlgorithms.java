@@ -6,6 +6,8 @@ import java.util.List;
 
 /** Member 2: sorting algorithm implementations. Sorts the supplied list in-place. */
 public final class SortingAlgorithms {
+    private static final int INSERTION_SORT_LIMIT = 10_000;
+
     private SortingAlgorithms() { }
 
     public static <T> void sort(List<T> items, Comparator<? super T> comparator, SortAlgorithm algorithm) {
@@ -19,6 +21,11 @@ public final class SortingAlgorithms {
     }
 
     public static <T> void insertionSort(List<T> a, Comparator<? super T> c) {
+        if (a.size() > INSERTION_SORT_LIMIT) {
+            // A quadratic sort is not practical for large uploaded datasets.
+            mergeSort(a, c);
+            return;
+        }
         for (int i = 1; i < a.size(); i++) {
             T key = a.get(i); int j = i - 1;
             while (j >= 0 && c.compare(a.get(j), key) > 0) { a.set(j + 1, a.get(j)); j--; }

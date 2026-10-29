@@ -33,6 +33,8 @@ public class MainApp extends Application {
     private final Button sortButton = new Button("Compare all algorithms");
     private final Label fileLabel = new Label("No CSV file loaded");
     private final Label bestLabel = new Label("Fastest algorithm: —");
+    private final Label comparisonStatusLabel = new Label();
+    private final ProgressIndicator comparisonProgress = new ProgressIndicator();
     private final TableView<PerformanceResult> performanceTable = new TableView<>();
     private CsvDataset dataset;
 
@@ -48,11 +50,14 @@ public class MainApp extends Application {
         columnCombo.setOnAction(event -> sortButton.setDisable(dataset == null || columnCombo.getValue() == null));
         orderCombo.getItems().addAll("Ascending", "Descending");
         orderCombo.setValue("Ascending");
+        comparisonProgress.setPrefSize(22, 22);
+        comparisonProgress.setVisible(false);
+        comparisonProgress.setManaged(false);
 
         HBox uploadRow = new HBox(12, uploadButton, fileLabel);
         uploadRow.setAlignment(Pos.CENTER_LEFT);
         HBox controls = new HBox(10, new Label("Numeric column:"), columnCombo,
-                new Label("Order:"), orderCombo, sortButton);
+                new Label("Order:"), orderCombo, sortButton, comparisonProgress, comparisonStatusLabel);
         controls.setAlignment(Pos.CENTER_LEFT);
         Label dataHeading = heading("Dataset Preview");
         Label performanceHeading = heading("Algorithm Performance");
@@ -105,6 +110,9 @@ public class MainApp extends Application {
         List<List<String>> snapshot = dataset.copyRows();
         Comparator<List<String>> comparator = numericComparator(columnIndex, ascending);
         sortButton.setDisable(true);
+        comparisonProgress.setVisible(true);
+        comparisonProgress.setManaged(true);
+        comparisonStatusLabel.setText("Comparing algorithms...");
         Task<BenchmarkService.BenchmarkReport> task = new Task<>() {
             @Override protected BenchmarkService.BenchmarkReport call() {
                 return benchmarkService.compare(snapshot, comparator);
@@ -119,11 +127,17 @@ public class MainApp extends Application {
             bestLabel.setText("Fastest algorithm: " + fastest.getAlgorithm()
                     + " (" + fastest.getMilliseconds() + " ms)");
             sortButton.setDisable(false);
+            comparisonProgress.setVisible(false);
+            comparisonProgress.setManaged(false);
+            comparisonStatusLabel.setText("Comparison complete.");
         });
         task.setOnFailed(event -> {
             Throwable error = task.getException();
             showError("Sorting failed: " + (error == null ? "Unknown error" : error.getMessage()));
             sortButton.setDisable(false);
+            comparisonProgress.setVisible(false);
+            comparisonProgress.setManaged(false);
+            comparisonStatusLabel.setText("Comparison failed.");
         });
         Thread thread = new Thread(task, "csv-sort-benchmark");
         thread.setDaemon(true);

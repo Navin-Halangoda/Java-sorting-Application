@@ -18,12 +18,23 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
 public class MainApp extends Application {
+    private static final String APP_STYLESHEET = ".root { -fx-base: #f8fafc; -fx-background-color: #f8fafc; }\n"
+            + ".table-view { -fx-background-color: #ffffff; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; -fx-background-radius: 6px; -fx-table-cell-border-color: #f1f5f9; }\n"
+            + ".table-view .column-header-background { -fx-background-color: #f1f5f9; -fx-background-radius: 6px 6px 0 0; }\n"
+            + ".table-view .column-header { -fx-background-color: transparent; -fx-border-color: transparent #e2e8f0 #cbd5e1 transparent; -fx-border-width: 0 1 1 0; -fx-padding: 6px 8px; }\n"
+            + ".table-view .column-header .label { -fx-text-fill: #1e3a8a; -fx-font-weight: bold; -fx-font-size: 13px; }\n"
+            + ".table-view .filler { -fx-background-color: #f1f5f9; -fx-border-color: transparent transparent #cbd5e1 transparent; -fx-border-width: 0 0 1 0; }\n"
+            + ".table-row-cell:odd { -fx-background-color: #f8fafc; }\n"
+            + ".table-row-cell:even { -fx-background-color: #ffffff; }\n"
+            + ".table-row-cell:selected { -fx-background-color: #e0f2fe; -fx-text-fill: #0f172a; }";
+
     private final CsvFileService csvService = new CsvFileService();
     private final BenchmarkService benchmarkService = new BenchmarkService();
     private final TableView<ObservableList<String>> dataTable = new TableView<>();
@@ -42,21 +53,56 @@ public class MainApp extends Application {
         stage.setTitle("CSV SortLab - Numeric Sorting Performance Analyzer");
         Button uploadButton = new Button("Upload CSV");
         uploadButton.setOnAction(event -> uploadCsv(stage));
+        uploadButton.setStyle("-fx-background-color: #ffffff; -fx-text-fill: #1e293b; "
+                + "-fx-font-weight: bold; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; "
+                + "-fx-background-radius: 6px; -fx-padding: 6px 14px; -fx-cursor: hand;");
+        uploadButton.setOnMouseEntered(event -> uploadButton.setStyle("-fx-background-color: #f1f5f9; -fx-text-fill: #0f172a; "
+                + "-fx-font-weight: bold; -fx-border-color: #94a3b8; -fx-border-radius: 6px; "
+                + "-fx-background-radius: 6px; -fx-padding: 6px 14px; -fx-cursor: hand;"));
+        uploadButton.setOnMouseExited(event -> uploadButton.setStyle("-fx-background-color: #ffffff; -fx-text-fill: #1e293b; "
+                + "-fx-font-weight: bold; -fx-border-color: #cbd5e1; -fx-border-radius: 6px; "
+                + "-fx-background-radius: 6px; -fx-padding: 6px 14px; -fx-cursor: hand;"));
+
+        fileLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #64748b;");
+
         sortButton.setOnAction(event -> compareAlgorithms());
         sortButton.setDisable(true);
+        updateSortButtonStyle();
+        sortButton.disabledProperty().addListener((obs, oldVal, newVal) -> updateSortButtonStyle());
+        sortButton.setOnMouseEntered(event -> {
+            if (!sortButton.isDisabled()) {
+                sortButton.setStyle("-fx-background-color: #1d4ed8; -fx-text-fill: #ffffff; "
+                        + "-fx-font-weight: bold; -fx-background-radius: 6px; -fx-padding: 6px 16px; -fx-cursor: hand;");
+            }
+        });
+        sortButton.setOnMouseExited(event -> updateSortButtonStyle());
+
+        String comboStyle = "-fx-background-color: #ffffff; -fx-border-color: #cbd5e1; "
+                + "-fx-border-radius: 6px; -fx-background-radius: 6px; -fx-font-size: 13px;";
         columnCombo.setPromptText("Select numeric column");
         columnCombo.setPrefWidth(200);
+        columnCombo.setStyle(comboStyle);
         columnCombo.setOnAction(event -> sortButton.setDisable(dataset == null || columnCombo.getValue() == null));
         orderCombo.getItems().addAll("Ascending", "Descending");
         orderCombo.setValue("Ascending");
+        orderCombo.setStyle(comboStyle);
         comparisonProgress.setPrefSize(22, 22);
+        comparisonProgress.setStyle("-fx-progress-color: #2563eb;");
         comparisonProgress.setVisible(false);
         comparisonProgress.setManaged(false);
 
+        comparisonStatusLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #475569;");
+
         HBox uploadRow = new HBox(12, uploadButton, fileLabel);
         uploadRow.setAlignment(Pos.CENTER_LEFT);
-        HBox controls = new HBox(10, new Label("Numeric column:"), columnCombo,
-                new Label("Order:"), orderCombo, sortButton, comparisonProgress, comparisonStatusLabel);
+
+        Label columnLabel = new Label("Numeric column:");
+        columnLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #334155;");
+        Label orderLabel = new Label("Order:");
+        orderLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #334155;");
+
+        HBox controls = new HBox(10, columnLabel, columnCombo,
+                orderLabel, orderCombo, sortButton, comparisonProgress, comparisonStatusLabel);
         controls.setAlignment(Pos.CENTER_LEFT);
         Label dataHeading = heading("Dataset Preview");
         Label performanceHeading = heading("Algorithm Performance");
@@ -73,19 +119,56 @@ public class MainApp extends Application {
         VBox content = new VBox(12, uploadRow, controls, dataHeading, dataTable,
                 performanceHeading, performanceTable, bestLabel);
         content.setPadding(new Insets(16));
+        content.setStyle("-fx-background-color: #f8fafc;");
         VBox.setVgrow(dataTable, Priority.ALWAYS);
         dataTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
-        dataTable.setPlaceholder(new Label("Upload a CSV file to display its data."));
+        Label dataPlaceholder = new Label("Upload a CSV file to display its data.");
+        dataPlaceholder.setStyle("-fx-text-fill: #64748b; -fx-font-size: 13px;");
+        dataTable.setPlaceholder(dataPlaceholder);
+        String tableStyle = "-fx-base: #f8fafc; -fx-background-color: #ffffff; "
+                + "-fx-table-cell-border-color: #f1f5f9; -fx-border-color: #cbd5e1; "
+                + "-fx-border-radius: 6px; -fx-background-radius: 6px;";
+        dataTable.setStyle(tableStyle);
         performanceTable.setPrefHeight(180);
         performanceTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+        performanceTable.setStyle(tableStyle);
+        Label perfPlaceholder = new Label("Run a comparison to see execution times.");
+        perfPlaceholder.setStyle("-fx-text-fill: #64748b; -fx-font-size: 13px;");
+        performanceTable.setPlaceholder(perfPlaceholder);
         Scene scene = new Scene(content, 1150, 760);
+        applyStylesheet(scene);
         stage.setScene(scene);
         stage.show();
     }
 
+    private void updateSortButtonStyle() {
+        if (sortButton.isDisabled()) {
+            sortButton.setStyle("-fx-background-color: #e2e8f0; -fx-text-fill: #94a3b8; "
+                    + "-fx-font-weight: bold; -fx-background-radius: 6px; -fx-padding: 6px 16px; -fx-cursor: default;");
+        } else {
+            sortButton.setStyle("-fx-background-color: #2563eb; -fx-text-fill: #ffffff; "
+                    + "-fx-font-weight: bold; -fx-background-radius: 6px; -fx-padding: 6px 16px; -fx-cursor: hand;");
+        }
+    }
+
+    private void applyStylesheet(Scene scene) {
+        try {
+            URL resource = getClass().getResource("/style.css");
+            if (resource != null) {
+                scene.getStylesheets().add(resource.toExternalForm());
+            } else {
+                File tempCss = File.createTempFile("csvsortlab-style", ".css");
+                tempCss.deleteOnExit();
+                java.nio.file.Files.writeString(tempCss.toPath(), APP_STYLESHEET);
+                scene.getStylesheets().add(tempCss.toURI().toString());
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
     private Label heading(String text) {
         Label label = new Label(text);
-        label.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        label.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e3a8a;");
         return label;
     }
 
@@ -99,6 +182,7 @@ public class MainApp extends Application {
             CsvDataset loaded = csvService.load(file.toPath());
             dataset = loaded;
             fileLabel.setText(file.getName() + " (" + dataset.getRowCount() + " rows)");
+            fileLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #0f172a; -fx-font-weight: bold;");
             columnCombo.getItems().setAll(dataset.getNumericColumnNames());
             if (!columnCombo.getItems().isEmpty()) columnCombo.getSelectionModel().selectFirst();
             showRows(dataset.copyRows());
@@ -121,6 +205,7 @@ public class MainApp extends Application {
         comparisonProgress.setVisible(true);
         comparisonProgress.setManaged(true);
         comparisonStatusLabel.setText("Comparing algorithms...");
+        comparisonStatusLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #2563eb;");
         Task<BenchmarkService.BenchmarkReport> task = new Task<>() {
             @Override protected BenchmarkService.BenchmarkReport call() {
                 return benchmarkService.compare(snapshot, comparator);
@@ -138,6 +223,7 @@ public class MainApp extends Application {
             comparisonProgress.setVisible(false);
             comparisonProgress.setManaged(false);
             comparisonStatusLabel.setText("Comparison complete.");
+            comparisonStatusLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #059669;");
         });
         task.setOnFailed(event -> {
             Throwable error = task.getException();
@@ -146,6 +232,7 @@ public class MainApp extends Application {
             comparisonProgress.setVisible(false);
             comparisonProgress.setManaged(false);
             comparisonStatusLabel.setText("Comparison failed.");
+            comparisonStatusLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #dc2626;");
         });
         Thread thread = new Thread(task, "csv-sort-benchmark");
         thread.setDaemon(true);
@@ -191,7 +278,9 @@ public class MainApp extends Application {
         timeCol.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getMilliseconds()));
         performanceTable.getColumns().add(algorithmCol);
         performanceTable.getColumns().add(timeCol);
-        performanceTable.setPlaceholder(new Label("Run a comparison to see execution times."));
+        Label placeholder = new Label("Run a comparison to see execution times.");
+        placeholder.setStyle("-fx-text-fill: #64748b; -fx-font-size: 13px;");
+        performanceTable.setPlaceholder(placeholder);
     }
 
     private void showError(String message) {

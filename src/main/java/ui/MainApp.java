@@ -61,6 +61,15 @@ public class MainApp extends Application {
         Label dataHeading = heading("Dataset Preview");
         Label performanceHeading = heading("Algorithm Performance");
         configurePerformanceTable();
+        bestLabel.setStyle("-fx-font-size: 14px; "
+                + "-fx-font-weight: bold; "
+                + "-fx-text-fill: #1e3a8a; "
+                + "-fx-background-color: #e0f2fe; "
+                + "-fx-padding: 8px 14px; "
+                + "-fx-background-radius: 6px; "
+                + "-fx-border-color: #93c5fd; "
+                + "-fx-border-radius: 6px; "
+                + "-fx-border-width: 1px;");
         VBox content = new VBox(12, uploadRow, controls, dataHeading, dataTable,
                 performanceHeading, performanceTable, bestLabel);
         content.setPadding(new Insets(16));

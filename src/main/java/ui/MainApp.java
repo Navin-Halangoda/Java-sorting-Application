@@ -179,7 +179,7 @@ public class MainApp extends Application {
     private void configurePerformanceTable() {
         TableColumn<PerformanceResult, String> algorithmCol = new TableColumn<>("Algorithm");
         algorithmCol.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getAlgorithm()));
-        TableColumn<PerformanceResult, String> timeCol = new TableColumn<>("Execution time (ms)");
+        TableColumn<PerformanceResult, String> timeCol = new TableColumn<>("Median execution time (ms)");
         timeCol.setCellValueFactory(data -> new ReadOnlyStringWrapper(data.getValue().getMilliseconds()));
         performanceTable.getColumns().add(algorithmCol);
         performanceTable.getColumns().add(timeCol);

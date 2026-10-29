@@ -5,11 +5,13 @@ import algorithms.SortingAlgorithms;
 import model.PerformanceResult;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
 /** Member 3: repeated timing and result verification. */
 public class BenchmarkService {
+    private static final int MEASUREMENT_RUNS = 5;
     private final int warmupRuns;
 
     public BenchmarkService() { this(2); }
@@ -31,20 +33,32 @@ public class BenchmarkService {
                 SortingAlgorithms.sort(warmup, comparator, algorithm);
             }
 
-            List<List<String>> working = copyRows(originalRows);
-            long start = System.nanoTime();
-            SortingAlgorithms.sort(working, comparator, algorithm);
-            long elapsed = System.nanoTime() - start;
-            if (!isSorted(working, comparator)) {
-                throw new IllegalStateException(algorithm.getDisplayName() + " produced an incorrectly sorted result.");
+            long[] measurements = new long[MEASUREMENT_RUNS];
+            List<List<String>> measuredRows = null;
+            for (int run = 0; run < MEASUREMENT_RUNS; run++) {
+                List<List<String>> working = copyRows(originalRows);
+                long start = System.nanoTime();
+                SortingAlgorithms.sort(working, comparator, algorithm);
+                measurements[run] = System.nanoTime() - start;
+                if (!isSorted(working, comparator)) {
+                    throw new IllegalStateException(algorithm.getDisplayName()
+                            + " produced an incorrectly sorted result.");
+                }
+                measuredRows = working;
             }
+            long elapsed = median(measurements);
             results.add(new PerformanceResult(algorithm.getDisplayName(), elapsed));
             if (elapsed < fastestTime) {
                 fastestTime = elapsed;
-                fastestRows = working;
+                fastestRows = measuredRows;
             }
         }
         return new BenchmarkReport(results, fastestRows);
+    }
+
+    private static long median(long[] measurements) {
+        Arrays.sort(measurements);
+        return measurements[measurements.length / 2];
     }
 
     private static List<List<String>> copyRows(List<List<String>> source) {
